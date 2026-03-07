@@ -1,2 +1,2 @@
-# lift_aptitudes
-Gym ranked basically
+Basically just gym ranked
+whas
