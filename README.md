@@ -1,2 +1,1 @@
-Basically just gym ranked
-whas
+Basically just gym ranked, with lift tracking, accounts, completely free, deployed on vercel
