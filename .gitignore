@@ -43,3 +43,5 @@ next-env.d.ts
 # planning md
 PLANNING.md
 Instructions.md
+
+/src/generated/prisma

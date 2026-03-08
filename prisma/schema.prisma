@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+
+enum Gender{
+  MALE
+  FEMALE
+}
+
+enum WeightUnit{
+  POUNDS
+  KILOGRAMS
+}
+
+enum ExperienceLevel{
+  BEGINNER
+  NOVICE
+  INTERMEDIATE
+  ADVANCED 
+  ELITE
+}
+
+
+model UserProfiles {
+  user_id String @id     
+  display_name String @unique
+  gender Gender
+  bodyweight Float
+  bodyweight_unit WeightUnit
+  experience_level ExperienceLevel
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+}
+
+model Lifts{
+  id Int @id @default(autoincrement())
+  name String
+  muscle_group String
+  secondary_muscles String[]
+  description String
+  is_compound Boolean
+  standards StrengthStandards[]
+  entries UserLiftEntries[]
+}
+
+model StrengthStandards {
+  id Int @id @default(autoincrement())
+  lift_id Int
+  lift Lifts @relation(fields: [lift_id], references: [id])
+  gender Gender
+  bodyweight_min Float
+  bodyweight_max Float
+  experience_level ExperienceLevel
+  standard Float
+  @@unique([lift_id, gender, bodyweight_min])
+}
+
+model UserLiftEntries{
+  id Int @id @default(autoincrement())
+  user_id String
+  lift_id Int
+  lift Lifts @relation(fields: [lift_id], references: [id])
+  weight Float
+  reps Int
+  estimated_1rm Float
+  date DateTime @default(now())
+  created_at DateTime @default(now())
+}
+
