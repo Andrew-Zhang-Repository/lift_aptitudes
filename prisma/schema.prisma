@@ -48,7 +48,7 @@ model UserProfiles {
 
 model Lifts{
   id Int @id @default(autoincrement())
-  name String
+  name String @unique
   muscle_group String
   secondary_muscles String[]
   description String
@@ -62,11 +62,10 @@ model StrengthStandards {
   lift_id Int
   lift Lifts @relation(fields: [lift_id], references: [id])
   gender Gender
-  bodyweight_min Float
-  bodyweight_max Float
+  bodyweight Float
   experience_level ExperienceLevel
   standard Float
-  @@unique([lift_id, gender, bodyweight_min])
+  @@unique([lift_id, gender, bodyweight, experience_level])
 }
 
 model UserLiftEntries{
