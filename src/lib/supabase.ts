@@ -3,7 +3,8 @@ import { createServerClient as createServerClientFn } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { CookieOptions } from '@supabase/ssr'
 
-// browser client
+
+
 export function createClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,7 +28,7 @@ export async function createServerClient() {
               cookieStore.set(name, value, options)
             })
           } catch {
-          
+
           }
         },
       },
