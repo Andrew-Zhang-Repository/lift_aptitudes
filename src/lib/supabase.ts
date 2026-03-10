@@ -2,7 +2,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { createServerClient as createServerClientFn } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { CookieOptions } from '@supabase/ssr'
-
+import "dotenv/config";
 
 
 export function createClient() {
