@@ -41,12 +41,9 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6.5 6.5h11M6.5 17.5h11" />
-              <rect x="2" y="4" width="4" height="6" rx="1" />
-              <rect x="18" y="4" width="4" height="6" rx="1" />
-              <rect x="2" y="14" width="4" height="6" rx="1" />
-              <rect x="18" y="14" width="4" height="6" rx="1" />
-              <line x1="12" y1="6.5" x2="12" y2="17.5" />
+              <rect x="2" y="8" width="4" height="8" rx="1" />
+              <rect x="18" y="8" width="4" height="8" rx="1" />
+              <line x1="6" y1="12" x2="18" y2="12" />
             </svg>
             Lift Aptitudes
           </h1>

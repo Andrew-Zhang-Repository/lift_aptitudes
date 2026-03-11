@@ -1,7 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import "dotenv/config"
 
-// Browser client for client-side components only
+
 export function createClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

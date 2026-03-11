@@ -14,7 +14,6 @@ export default function LoginPage() {
       setLoading(true);
       setError(null);
       await signInWithGoogle();
-      // We don't need to set loading to false because the page will redirect to Google
     } catch (err: any) {
       console.error(err);
       setError("Failed to sign in with Google. Please try again.");
@@ -29,12 +28,9 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-neutral-800 border border-neutral-700 mb-4 shadow-lg">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6.5 6.5h11M6.5 17.5h11" />
-              <rect x="2" y="4" width="4" height="6" rx="1" />
-              <rect x="18" y="4" width="4" height="6" rx="1" />
-              <rect x="2" y="14" width="4" height="6" rx="1" />
-              <rect x="18" y="14" width="4" height="6" rx="1" />
-              <line x1="12" y1="6.5" x2="12" y2="17.5" />
+              <rect x="2" y="8" width="4" height="8" rx="1" />
+              <rect x="18" y="8" width="4" height="8" rx="1" />
+              <line x1="6" y1="12" x2="18" y2="12" />
             </svg>
           </div>
           <h1 className={`${lusitana.className} text-3xl font-bold text-white tracking-tight`}>

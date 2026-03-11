@@ -2,7 +2,7 @@ import { createServerClient as createSSRClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import "dotenv/config"
 
-// Server client for server components and API routes only
+
 export async function createServerClient() {
   const cookieStore = await cookies()
 
