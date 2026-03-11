@@ -1,37 +1,7 @@
-import { createBrowserClient } from '@supabase/ssr'
-import { createServerClient as createServerClientFn } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import type { CookieOptions } from '@supabase/ssr'
-import "dotenv/config";
+// DEPRECATED: This file has been split into supabase-browser.ts and supabase-server.ts
+// Please update your imports:
+//   - For client components: import { createClient } from './supabase-browser'
+//   - For server components: import { createServerClient } from './supabase-server'
 
-
-export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
-
-export async function createServerClient() {
-  const cookieStore = await cookies()
-  return createServerClientFn(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          } catch {
-
-          }
-        },
-      },
-    }
-  )
-}
+export { createClient } from './supabase-browser'
+export { createServerClient } from './supabase-server'
