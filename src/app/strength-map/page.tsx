@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BodyDiagram from "../../components/BodyDiagram";
-import { getRankings, getProfile, ProfileResponse } from "../../lib/api";
+import { getRankings, getProfile, deleteAllLiftEntries, ProfileResponse } from "../../lib/api";
 
 const TIER_COLORS = [
   { tier: "ELITE", color: "#EAB308", label: "Elite" },
@@ -21,6 +21,7 @@ export default function StrengthMapPage() {
   const [rankings, setRankings] = useState<Record<string, any>>({});
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -41,6 +42,22 @@ export default function StrengthMapPage() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!confirm("Are you sure you want to clear all lift data? This cannot be undone.")) {
+      return;
+    }
+
+    setClearing(true);
+    try {
+      await deleteAllLiftEntries();
+      setRankings({});
+    } catch (err: any) {
+      setError(err.message || "Failed to clear data.");
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -135,6 +152,23 @@ export default function StrengthMapPage() {
               </span>
             </div>
           </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <Link
+            href="/add-lift"
+            className="flex-1 py-3 px-6 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors text-center"
+          >
+            + Add More Lifts
+          </Link>
+          <button
+            onClick={handleClearAll}
+            disabled={clearing || Object.keys(rankings).length === 0}
+            className="flex-1 py-3 px-6 rounded-lg border border-red-500 text-red-500 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {clearing ? "Clearing..." : "Clear All Data"}
+          </button>
         </div>
 
         {/* Muscle Group Details */}

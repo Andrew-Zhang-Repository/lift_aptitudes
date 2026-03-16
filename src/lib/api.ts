@@ -71,6 +71,20 @@ export async function getLiftEntries() {
   return handleResponse(res);
 }
 
+export type Lift = {
+  id: number;
+  name: string;
+  muscle_group: string;
+  secondary_muscles: string[];
+  description: string;
+  is_compound: boolean;
+};
+
+export async function getAvailableLifts(): Promise<Lift[]> {
+  const res = await fetch('/api/lifts?available=true');
+  return handleResponse(res);
+}
+
 export async function createLiftEntry(data: LiftEntryInput) {
   const res = await fetch('/api/lifts', {
     method: 'POST',
@@ -98,6 +112,17 @@ export async function deleteLiftEntry(id: number) {
     throw new Error(error || `HTTP ${res.status}`);
   }
   // DELETE returns 204 No Content, so no JSON to parse
+  return true;
+}
+
+export async function deleteAllLiftEntries() {
+  const res = await fetch(`/api/lifts?all=true`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || `HTTP ${res.status}`);
+  }
   return true;
 }
 

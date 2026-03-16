@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { getMuscleColor, MUSCLE_MAPPING } from "../lib/muscle-paths";
+import { useEffect, useState } from "react";
+import { getMuscleColor } from "../lib/muscle-paths";
 
 type RankingData = {
   tier: string;
@@ -29,74 +29,94 @@ export default function BodyDiagram({ rankings }: Props) {
     });
   }, []);
 
-  // Get colors for all muscles
-  const colors = useMemo(() => {
-    const result: Record<string, string> = {};
-    Object.keys(MUSCLE_MAPPING).forEach((muscleName) => {
-      result[muscleName] = getMuscleColor(muscleName, rankings);
-    });
-    return result;
-  }, [rankings]);
-
-  // Process SVG to add colors to muscle groups
-  const processSvg = (svg: string) => {
-    if (!svg) return "";
-
+  const colorizeFrontSvg = (svg: string): string => {
+    if (!svg) return svg;
+    
     let processed = svg;
-
-    // Remove the default muscle fill color (#515761) and replace with our colors
-    // Target each muscle by its ID
-    Object.entries(MUSCLE_MAPPING).forEach(([muscleName, ids]) => {
-      const color = colors[muscleName];
-      
-      // Color front muscle
-      if (ids.front) {
-        // Replace fill in the muscle group
-        processed = processed.replace(
-          new RegExp(`(<g[^>]*id=["']${ids.front}["'][^>]*>)`, "gi"),
-          (match) => match.replace(/>$/, ` fill="${color}">`)
-        );
-      }
-      
-      // Color back muscle  
-      if (ids.back) {
-        processed = processed.replace(
-          new RegExp(`(<g[^>]*id=["']${ids.back}["'][^>]*>)`, "gi"),
-          (match) => match.replace(/>$/, ` fill="${color}">`)
-        );
-      }
-    });
-
-    // Also try to target paths directly with the muscle class and specific IDs
-    Object.entries(MUSCLE_MAPPING).forEach(([muscleName, ids]) => {
-      const color = colors[muscleName];
-      
-      // Target paths inside muscle groups
-      if (ids.front) {
-        processed = processed.replace(
-          new RegExp(`(<path[^>]*id=["']${ids.front}["'][^>]*)(/?>)`, "gi"),
-          `$1 fill="${color}" $2`
-        );
-      }
-      if (ids.back) {
-        processed = processed.replace(
-          new RegExp(`(<path[^>]*id=["']${ids.back}["'][^>]*)(/?>)`, "gi"),
-          `$1 fill="${color}" $2`
-        );
-      }
-    });
-
-    // Replace default muscle fill color
-    processed = processed.replace(/class="muscle" fill="#515761"/g, (match) => {
-      // Find which muscle this is and apply correct color
-      return 'class="muscle"';
-    });
-
+    
+    processed = processed.replace(
+      /<g class="muscle" id = "pectorals">/g,
+      `<g class="muscle" id="pectorals" style="fill: ${getMuscleColor("Chest", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "quadriceps">/g,
+      `<g class="muscle" id="quadriceps" style="fill: ${getMuscleColor("Quads", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "biceps">/g,
+      `<g class="muscle" id="biceps" style="fill: ${getMuscleColor("Biceps", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "deltoids">/g,
+      `<g class="muscle" id="deltoids" style="fill: ${getMuscleColor("Shoulders", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "abdomen">/g,
+      `<g class="muscle" id="abdomen" style="fill: ${getMuscleColor("Abs", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "trapezoid">/g,
+      `<g class="muscle" id="trapezoid" style="fill: ${getMuscleColor("Traps", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "flexors">/g,
+      `<g class="muscle" id="flexors" style="fill: ${getMuscleColor("Forearms", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "gastrocnemius">/g,
+      `<g class="muscle" id="gastrocnemius" style="fill: ${getMuscleColor("Calves", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "tibialis">/g,
+      `<g class="muscle" id="tibialis" style="fill: ${getMuscleColor("Calves", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "abductors">/g,
+      `<g class="muscle" id="abductors" style="fill: ${getMuscleColor("Glutes", rankings)};">`
+    );
+    
     return processed;
   };
 
-  const coloredFront = processSvg(frontSvg);
-  const coloredBack = processSvg(backSvg);
+  const colorizeBackSvg = (svg: string): string => {
+    if (!svg) return svg;
+    
+    let processed = svg;
+  
+    processed = processed.replace(
+      /<g class="muscle" id = "trapezoidback">/g,
+      `<g class="muscle" id="trapezoidback" style="fill: ${getMuscleColor("Back", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "backdeltoids">/g,
+      `<g class="muscle" id="backdeltoids" style="fill: ${getMuscleColor("Shoulders", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "triceps">/g,
+      `<g class="muscle" id="triceps" style="fill: ${getMuscleColor("Triceps", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "lowerback">/g,
+      `<g class="muscle" id="lowerback" style="fill: ${getMuscleColor("Back", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "gluteus">/g,
+      `<g class="muscle" id="gluteus" style="fill: ${getMuscleColor("Glutes", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "hamstrings">/g,
+      `<g class="muscle" id="hamstrings" style="fill: ${getMuscleColor("Hamstrings", rankings)};">`
+    );
+    processed = processed.replace(
+      /<g class="muscle" id = "lowerleg">/g,
+      `<g class="muscle" id="lowerleg" style="fill: ${getMuscleColor("Calves", rankings)};">`
+    );
+    
+    return processed;
+  };
+
+  const coloredFront = colorizeFrontSvg(frontSvg);
+  const coloredBack = colorizeBackSvg(backSvg);
 
   if (!frontSvg || !backSvg) {
     return (

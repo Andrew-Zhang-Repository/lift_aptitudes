@@ -233,18 +233,12 @@ export async function calculateAllRankings(
       profile.gender
     );
 
+    // Only rank the primary muscle group, not secondary muscles
     const primaryGroup = entry.lift.muscle_group;
 
     const existingPrimary = results.get(primaryGroup);
     if (!existingPrimary || ranking.percentile > existingPrimary.percentile) {
       results.set(primaryGroup, ranking);
-    }
-
-    for (const secondaryGroup of entry.lift.secondary_muscles) {
-      const existingSecondary = results.get(secondaryGroup);
-      if (!existingSecondary || ranking.percentile > existingSecondary.percentile) {
-        results.set(secondaryGroup, ranking);
-      }
     }
   }
 

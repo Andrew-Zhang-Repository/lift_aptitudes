@@ -4,7 +4,27 @@ import prisma from '../../../lib/prisma'
 import { createServerClient } from '../../../lib/supabase-server'
 import { one_rep_max } from '../../../lib/rep-max'
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const available = searchParams.get('available')
+
+  // If ?available=true, return list of available lifts (no auth required)
+  if (available === 'true') {
+    const lifts = await prisma.lifts.findMany({
+      select: {
+        id: true,
+        name: true,
+        muscle_group: true,
+        secondary_muscles: true,
+        description: true,
+        is_compound: true
+      },
+      orderBy: { name: 'asc' }
+    })
+    return NextResponse.json(lifts)
+  }
+
+  // Otherwise, return user's lift entries (auth required)
   const supabase = await createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   
@@ -101,6 +121,15 @@ export async function DELETE(request: Request) {
   
   const { searchParams } = new URL(request.url)
   const id = searchParams.get('id')
+  const deleteAll = searchParams.get('all')
+  
+  // If ?all=true, delete all user entries
+  if (deleteAll === 'true') {
+    await prisma.userLiftEntries.deleteMany({
+      where: { user_id: user.id }
+    })
+    return new NextResponse(null, { status: 204 })
+  }
   
   if (!id) {
     return NextResponse.json({ error: 'Missing entry id' }, { status: 400 })
