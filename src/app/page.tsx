@@ -135,7 +135,38 @@ export default function Home() {
               : "Your lift data is saved and ready to compare."}
           </p>
 
-          {/* Placeholder cards for the lift comparison UI */}
+          {/* Dashboard cards for logged-in users */}
+          {user && hasProfile ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Link href="/strength-map" className="rounded-xl border border-gray-200 dark:border-neutral-700 p-6 hover:shadow-md transition-shadow bg-neutral-50 dark:bg-neutral-900/50">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                  Strength Map
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-neutral-400">
+                  Visualize your strengths on a body diagram.
+                </p>
+              </Link>
+
+              <Link href="/add-lift" className="rounded-xl border border-gray-200 dark:border-neutral-700 p-6 hover:shadow-md transition-shadow bg-neutral-50 dark:bg-neutral-900/50">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                  Add Lift
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-neutral-400">
+                  Log a new lift entry and track your progress.
+                </p>
+              </Link>
+
+              <div className="rounded-xl border border-gray-200 dark:border-neutral-700 p-6 hover:shadow-md transition-shadow bg-neutral-50 dark:bg-neutral-900/50">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                  Progress
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-neutral-400">
+                  View your lift history and trends.
+                </p>
+              </div>
+            </div>
+          ) : (
+          /* Placeholder cards for guests */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="rounded-xl border border-gray-200 dark:border-neutral-700 p-6 hover:shadow-md transition-shadow bg-neutral-50 dark:bg-neutral-900/50">
               <div className="text-3xl mb-3">📊</div>
@@ -169,6 +200,7 @@ export default function Home() {
               </p>
             </div>
           </div>
+          )}
         </div>
       </main>
     </div>
