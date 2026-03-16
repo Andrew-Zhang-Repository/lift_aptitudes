@@ -1,20 +1,53 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useAuth } from "./contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { getProfile, getRankings, ProfileResponse } from "../lib/api";
 
 export default function Home() {
-  const { user, logout, loading } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [hasProfile, setHasProfile] = useState(false);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [rankings, setRankings] = useState<Record<string, any>>({});
 
   const isGuest = !user;
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (user) {
+        checkProfile();
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [authLoading, user]);
+
+  const checkProfile = async () => {
+    try {
+      const profileData: ProfileResponse = await getProfile();
+      setProfile(profileData);
+      setHasProfile(true);
+      // Fetch rankings if profile exists
+      const ranks = await getRankings();
+      setRankings(ranks);
+    } catch (err: any) {
+      if (err.message.includes("401") || err.message.includes("Not found")) {
+        router.push("/onboarding");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
     router.push("/login");
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-neutral-900">
         <div className="text-center">
@@ -23,6 +56,12 @@ export default function Home() {
         </div>
       </div>
     );
+  }
+
+  // Redirect authenticated users without profile to onboarding
+  if (user && !hasProfile) {
+    router.push("/onboarding");
+    return null;
   }
 
   return (
@@ -66,9 +105,12 @@ export default function Home() {
               </>
             ) : (
               <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600 dark:text-neutral-400">
-                  {user.email}
-                </span>
+                <Link
+                  href="/profile"
+                  className="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                >
+                  {profile?.display_name || 'Profile'}
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 dark:border-neutral-700 text-sm font-medium text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
@@ -85,7 +127,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700 p-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            {isGuest ? "Welcome, Guest" : `Welcome back, ${user.email}`}
+            {isGuest ? "Welcome, Guest" : `Welcome back, ${profile?.display_name || user.email}`}
           </h2>
           <p className="text-gray-500 dark:text-neutral-400 mb-8">
             {isGuest

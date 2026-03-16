@@ -13,7 +13,7 @@ export default function SignupPage() {
     try {
       setLoading(true);
       setError(null);
-      await signInWithGoogle();
+      await signInWithGoogle('/onboarding');
       // Page redirects
     } catch (err: any) {
       console.error(err);

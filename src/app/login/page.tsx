@@ -13,7 +13,7 @@ export default function LoginPage() {
     try {
       setLoading(true);
       setError(null);
-      await signInWithGoogle();
+      await signInWithGoogle('/onboarding');
     } catch (err: any) {
       console.error(err);
       setError("Failed to sign in with Google. Please try again.");
@@ -33,6 +33,7 @@ export default function LoginPage() {
               <line x1="6" y1="12" x2="18" y2="12" />
             </svg>
           </div>
+          
           <h1 className={`${lusitana.className} text-3xl font-bold text-white tracking-tight`}>
             Lift Aptitudes
           </h1>

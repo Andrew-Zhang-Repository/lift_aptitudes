@@ -9,6 +9,12 @@ export type ProfileInput = {
   experience_level: ExperienceLevel;
 };
 
+export type ProfileResponse = ProfileInput & {
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type LiftEntryInput = {
   lift_id: number;
   weight: number;
@@ -36,13 +42,13 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 // Profile API
-export async function getProfile() {
-  const res = await fetch('/api/profile/profile_route');
+export async function getProfile(): Promise<ProfileResponse> {
+  const res = await fetch('/api/profile');
   return handleResponse(res);
 }
 
 export async function createProfile(data: ProfileInput) {
-  const res = await fetch('/api/profile/profile_route', {
+  const res = await fetch('/api/profile', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -50,8 +56,8 @@ export async function createProfile(data: ProfileInput) {
   return handleResponse(res);
 }
 
-export async function updateProfile(data: ProfileInput) {
-  const res = await fetch('/api/profile/profile_route', {
+export async function updateProfile(data: ProfileInput): Promise<ProfileResponse> {
+  const res = await fetch('/api/profile', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -61,12 +67,12 @@ export async function updateProfile(data: ProfileInput) {
 
 // Lifts API
 export async function getLiftEntries() {
-  const res = await fetch('/api/lifts/lifts_route');
+  const res = await fetch('/api/lifts');
   return handleResponse(res);
 }
 
 export async function createLiftEntry(data: LiftEntryInput) {
-  const res = await fetch('/api/lifts/lifts_route', {
+  const res = await fetch('/api/lifts', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -75,7 +81,7 @@ export async function createLiftEntry(data: LiftEntryInput) {
 }
 
 export async function updateLiftEntry(id: number, data: LiftEntryUpdateInput) {
-  const res = await fetch(`/api/lifts/lifts_route?id=${id}`, {
+  const res = await fetch(`/api/lifts?id=${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -84,7 +90,7 @@ export async function updateLiftEntry(id: number, data: LiftEntryUpdateInput) {
 }
 
 export async function deleteLiftEntry(id: number) {
-  const res = await fetch(`/api/lifts/lifts_route?id=${id}`, {
+  const res = await fetch(`/api/lifts?id=${id}`, {
     method: 'DELETE'
   });
   if (!res.ok) {
@@ -97,7 +103,7 @@ export async function deleteLiftEntry(id: number) {
 
 // Rankings API
 export async function getRankings(): Promise<Record<string, RankingResult>> {
-  const res = await fetch('/api/rankings/ranking_route');
+  const res = await fetch('/api/rankings');
   return handleResponse(res);
 }
 
