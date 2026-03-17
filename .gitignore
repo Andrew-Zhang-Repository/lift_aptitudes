@@ -51,4 +51,5 @@ secrets.toml
 /src/generated/prisma
 MuscleMap-main
 FalseStory-main
+prisma/seed_data
 

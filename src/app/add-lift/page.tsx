@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getAvailableLifts, createLiftEntry, getProfile, Lift, ProfileResponse } from "../../lib/api";
+import { getAvailableLifts, createLiftEntry, getProfile, updateProfile, Lift, ProfileResponse } from "../../lib/api";
 
 export default function AddLiftPage() {
   const router = useRouter();
@@ -13,6 +13,7 @@ export default function AddLiftPage() {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [unit, setUnit] = useState<"KILOGRAMS" | "POUNDS">("KILOGRAMS");
 
   const [formData, setFormData] = useState({
     lift_id: "",
@@ -23,6 +24,12 @@ export default function AddLiftPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (profile?.bodyweight_unit) {
+      setUnit(profile.bodyweight_unit);
+    }
+  }, [profile]);
 
   const fetchData = async () => {
     try {
@@ -53,20 +60,38 @@ export default function AddLiftPage() {
     const weight = parseFloat(formData.weight);
     const reps = parseInt(formData.reps);
 
-    if (!liftId || !weight || !reps) {
+    if (!liftId || !reps) {
       setError("Please fill in all fields.");
       setSubmitting(false);
       return;
     }
 
-    if (weight <= 0 || reps <= 0) {
-      setError("Weight and reps must be greater than 0.");
+    const selectedLift = lifts.find(l => l.id === liftId);
+    const isBodyweight = selectedLift?.name === "Pullups";
+
+    let weightKg = weight;
+    if (isBodyweight && profile) {
+      weightKg = profile.bodyweight_unit === "KILOGRAMS" 
+        ? profile.bodyweight 
+        : profile.bodyweight * 0.453592;
+    } else if (!isBodyweight && weight > 0) {
+      weightKg = unit === "POUNDS" ? weight * 0.453592 : weight;
+    }
+
+    if (!isBodyweight && (!weight || weight <= 0)) {
+      setError("Weight must be greater than 0.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (reps <= 0) {
+      setError("Reps must be greater than 0.");
       setSubmitting(false);
       return;
     }
 
     try {
-      await createLiftEntry({ lift_id: liftId, weight, reps });
+      await createLiftEntry({ lift_id: liftId, weight: isBodyweight ? weightKg : weightKg, reps });
       setSuccess("Lift added successfully!");
       setFormData({ lift_id: "", weight: "", reps: "" });
     } catch (err: any) {
@@ -80,6 +105,29 @@ export default function AddLiftPage() {
     setSuccess(null);
     setFormData({ lift_id: "", weight: "", reps: "" });
   };
+
+  const handleUnitToggle = async () => {
+    const newUnit = unit === "KILOGRAMS" ? "POUNDS" : "KILOGRAMS";
+    setUnit(newUnit);
+    
+    if (profile) {
+      try {
+        await updateProfile({
+          display_name: profile.display_name,
+          gender: profile.gender,
+          bodyweight: profile.bodyweight,
+          bodyweight_unit: newUnit,
+          experience_level: profile.experience_level,
+        });
+        setProfile({ ...profile, bodyweight_unit: newUnit });
+      } catch (err) {
+        console.error("Failed to update unit preference:", err);
+      }
+    }
+  };
+
+  const selectedLift = lifts.find(l => l.id === parseInt(formData.lift_id));
+  const isBodyweight = selectedLift?.name === "Pullups";
 
   if (loading) {
     return (
@@ -162,21 +210,32 @@ export default function AddLiftPage() {
             </div>
 
             {/* Weight */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-                Weight ({profile?.bodyweight_unit === "KILOGRAMS" ? "kg" : "lbs"}) *
-              </label>
-              <input
-                type="number"
-                step="0.5"
-                min="0"
-                value={formData.weight}
-                onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-500"
-                placeholder="Enter weight"
-                required
-              />
-            </div>
+            {!isBodyweight && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">
+                    Weight ({unit === "KILOGRAMS" ? "kg" : "lbs"}) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleUnitToggle}
+                    className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-neutral-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                  >
+                    {unit === "KILOGRAMS" ? "Switch to lbs" : "Switch to kg"}
+                  </button>
+                </div>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={formData.weight}
+                  onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  placeholder="Enter weight"
+                  required
+                />
+              </div>
+            )}
 
             {/* Reps */}
             <div>

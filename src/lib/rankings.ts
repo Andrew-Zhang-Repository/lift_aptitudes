@@ -133,8 +133,14 @@ export async function calculateRanking(
   liftId: number,
   estimated1RM: number,
   bodyweight: number,
-  gender: Gender
+  gender: Gender,
+  reps?: number
 ): Promise<RankingResult> {
+  const lift = await prisma.lifts.findUnique({
+    where: { id: liftId },
+  });
+
+  const isBodyweight = lift?.is_bodyweight || false;
   const clampedBodyweight = clampBodyweight(bodyweight, gender);
   const { lower, upper } = getBrackets(clampedBodyweight);
 
@@ -157,6 +163,68 @@ export async function calculateRanking(
   const lowerStandards = standards.filter((s) => s.bodyweight === lower);
   const upperStandards = standards.filter((s) => s.bodyweight === upper);
 
+  // For bodyweight exercises, compare reps directly instead of 1RM
+  if (isBodyweight && reps !== undefined) {
+    const userReps = reps;
+
+    // For bodyweight, standards.standard represents reps, not weight
+    // Find which tier the user's reps fall into
+    let tier: ExperienceLevel | "UNTRAINED" = "UNTRAINED";
+    let percentile = 0;
+
+    const tierReps: { tier: ExperienceLevel; reps: number }[] = [];
+    for (const tierName of TIER_ORDER) {
+      const lowerStd = lowerStandards.find((s) => s.experience_level === tierName);
+      const upperStd = upperStandards.find((s) => s.experience_level === tierName);
+      
+      if (lowerStd || upperStd) {
+        const repsValue = (lowerStd?.standard || upperStd?.standard) || 0;
+        tierReps.push({ tier: tierName, reps: repsValue });
+      }
+    }
+
+    // Find which tier the user's reps fall into
+    for (let i = 0; i < tierReps.length; i++) {
+      const currentTier = tierReps[i];
+      const nextTier = tierReps[i + 1];
+
+      if (userReps >= currentTier.reps) {
+        tier = currentTier.tier;
+        
+        // Calculate percentile within this tier
+        if (nextTier) {
+          const range = nextTier.reps - currentTier.reps;
+          if (range > 0) {
+            const position = (userReps - currentTier.reps) / range;
+            const tierStart = TIER_PERCENTILE_RANGES[currentTier.tier][0];
+            const tierEnd = TIER_PERCENTILE_RANGES[currentTier.tier][1];
+            percentile = Math.min(tierEnd, tierStart + position * (tierEnd - tierStart));
+          } else {
+            percentile = TIER_PERCENTILE_RANGES[currentTier.tier][0];
+          }
+        } else {
+          // Highest tier (ELITE)
+          percentile = TIER_PERCENTILE_RANGES[currentTier.tier][0];
+        }
+      }
+    }
+
+    // If still untrained, check if above beginner
+    if (tier === "UNTRAINED" && tierReps.length > 0) {
+      if (userReps >= tierReps[0].reps) {
+        tier = tierReps[0].tier;
+        percentile = 20;
+      }
+    }
+
+    return {
+      tier,
+      percentile: Math.round(percentile),
+      color: TIER_COLORS[tier],
+    };
+  }
+
+  // Original logic for weighted exercises
   const thresholds: TierThresholds = {
     BEGINNER: 0,
     NOVICE: 0,
@@ -230,7 +298,8 @@ export async function calculateAllRankings(
       entry.lift_id,
       entry.estimated_1rm,
       bodyweightKg,
-      profile.gender
+      profile.gender,
+      entry.reps
     );
 
     // Only rank the primary muscle group, not secondary muscles

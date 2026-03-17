@@ -4,13 +4,16 @@
 // Mapping of our DB muscle names to FalseStory SVG IDs
 export const MUSCLE_MAPPING: Record<string, { front?: string; back?: string }> = {
   Chest: { front: 'pectorals' },
-  Back: { back: 'trapezoidback' },
+  Back: { back: 'lowerback' },
   Quads: { front: 'quadriceps' },
   Glutes: { back: 'gluteus' },
   Shoulders: { front: 'deltoids', back: 'backdeltoids' },
   Biceps: { front: 'biceps' },
   Triceps: { back: 'triceps' },
   Hamstrings: { back: 'hamstrings' },
+  Traps: { back: 'trapezoidback' },
+  Abs: { front: 'abdomen' },
+  Calves: { front: 'gastrocnemius', back: 'lowerleg' },
 };
 
 // Get color for ranking tier

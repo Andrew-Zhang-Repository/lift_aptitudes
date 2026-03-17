@@ -53,6 +53,7 @@ model Lifts{
   secondary_muscles String[]
   description String
   is_compound Boolean
+  is_bodyweight Boolean @default(false)
   standards StrengthStandards[]
   entries UserLiftEntries[]
 }

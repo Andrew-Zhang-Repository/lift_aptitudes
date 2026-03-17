@@ -85,7 +85,7 @@ export default function BodyDiagram({ rankings }: Props) {
   
     processed = processed.replace(
       /<g class="muscle" id = "trapezoidback">/g,
-      `<g class="muscle" id="trapezoidback" style="fill: ${getMuscleColor("Back", rankings)};">`
+      `<g class="muscle" id="trapezoidback" style="fill: ${getMuscleColor("Traps", rankings)};">`
     );
     processed = processed.replace(
       /<g class="muscle" id = "backdeltoids">/g,
