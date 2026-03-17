@@ -15,7 +15,7 @@ export default function OnboardingPage() {
     display_name: "",
     gender: "MALE" as Gender,
     bodyweight: 0,
-    bodyweight_unit: "POUNDS" as WeightUnit,
+    bodyweight_unit: "KILOGRAMS" as WeightUnit,
     experience_level: "BEGINNER" as ExperienceLevel,
   });
 
@@ -155,8 +155,8 @@ export default function OnboardingPage() {
                 onChange={(e) => setFormData({ ...formData, bodyweight_unit: e.target.value as WeightUnit })}
                 className="input-dark w-full px-4 py-3 rounded-lg border border-neutral-700 bg-neutral-900 text-white focus:outline-none focus:ring-2 focus:ring-neutral-500"
               >
-                <option value="POUNDS">Pounds</option>
                 <option value="KILOGRAMS">Kilograms</option>
+                <option value="POUNDS">Pounds</option>
               </select>
             </div>
           </div>

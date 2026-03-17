@@ -12,6 +12,12 @@ type GuestEntry = {
   date: Date;
 };
 
+type GuestRankings = Record<string, {
+  tier: string;
+  percentile: number;
+  color: string;
+}>;
+
 type GuestContextType = {
   guestEntries: GuestEntry[];
   addGuestEntry: (entry: GuestEntry) => void;
@@ -23,6 +29,8 @@ type GuestContextType = {
   setGuestBodyweightUnit: (unit: "POUNDS" | "KILOGRAMS") => void;
   guestGender: "MALE" | "FEMALE";
   setGuestGender: (gender: "MALE" | "FEMALE") => void;
+  guestRankings: GuestRankings;
+  setGuestRankings: (rankings: GuestRankings) => void;
 };
 
 const GuestContext = createContext<GuestContextType | undefined>(undefined);
@@ -32,21 +40,19 @@ export function GuestProvider({ children }: { children: ReactNode }) {
   const [guestBodyweight, setGuestBodyweight] = useState<number>(0);
   const [guestBodyweightUnit, setGuestBodyweightUnit] = useState<"POUNDS" | "KILOGRAMS">("KILOGRAMS");
   const [guestGender, setGuestGender] = useState<"MALE" | "FEMALE">("MALE");
+  const [guestRankings, setGuestRankings] = useState<GuestRankings>({});
 
   const addGuestEntry = (entry: GuestEntry) => {
     setGuestEntries((prev) => {
-      const existingIndex = prev.findIndex((e) => e.lift_id === entry.lift_id);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex] = entry;
-        return updated;
-      }
       return [...prev, entry];
     });
+    // Clear rankings cache when new lift is added so strength map recalculates
+    setGuestRankings({});
   };
 
   const clearGuestEntries = () => {
     setGuestEntries([]);
+    setGuestRankings({});
   };
 
   const getGuestEntries = () => guestEntries;
@@ -63,6 +69,8 @@ export function GuestProvider({ children }: { children: ReactNode }) {
       setGuestBodyweightUnit,
       guestGender,
       setGuestGender,
+      guestRankings,
+      setGuestRankings,
     }}>
       {children}
     </GuestContext.Provider>

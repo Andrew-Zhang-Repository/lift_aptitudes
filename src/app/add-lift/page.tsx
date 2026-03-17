@@ -66,6 +66,9 @@ export default function AddLiftPage() {
     setError(null);
     setSuccess(null);
 
+    // Small delay to ensure UI updates before processing
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     const liftId = parseInt(formData.lift_id);
     const weight = parseFloat(formData.weight);
     const reps = parseInt(formData.reps);
@@ -129,9 +132,8 @@ export default function AddLiftPage() {
       setFormData({ lift_id: "", weight: "", reps: "" });
     } catch (err: any) {
       setError(err.message || "Failed to add lift. Please try again.");
-    } finally {
-      setSubmitting(false);
     }
+    setSubmitting(false);
   };
 
   const handleAddAnother = () => {

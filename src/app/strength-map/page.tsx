@@ -20,16 +20,21 @@ const TIER_COLORS = [
 export default function StrengthMapPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { guestEntries, clearGuestEntries, guestBodyweight, guestBodyweightUnit, guestGender } = useGuest();
+  const { guestEntries, clearGuestEntries, guestBodyweight, guestBodyweightUnit, guestGender, guestRankings, setGuestRankings } = useGuest();
   const [loading, setLoading] = useState(true);
   const [rankings, setRankings] = useState<Record<string, any>>({});
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
 
-  // Fetch guest rankings from API
+  // Fetch guest rankings from API (only if not cached)
   const fetchGuestRankings = async () => {
     if (guestEntries.length === 0 || !guestBodyweight) return {};
+    
+    // Check if we have cached rankings
+    if (Object.keys(guestRankings).length > 0) {
+      return guestRankings;
+    }
     
     try {
       const response = await fetch('/api/rankings/guest', {
@@ -47,19 +52,26 @@ export default function StrengthMapPage() {
         throw new Error('Failed to fetch rankings');
       }
       
-      return await response.json();
+      const rankingsData = await response.json();
+      setGuestRankings(rankingsData);
+      return rankingsData;
     } catch (err) {
       console.error('Error fetching guest rankings:', err);
       return {};
     }
   };
 
-  // Calculate guest rankings from guest entries
+  // Load guest rankings on mount (use cache if available)
   useEffect(() => {
     if (!user && guestEntries.length > 0 && guestBodyweight > 0) {
-      fetchGuestRankings().then(setRankings);
+      // If we have cached rankings, use them immediately
+      if (Object.keys(guestRankings).length > 0) {
+        setRankings(guestRankings);
+      } else {
+        fetchGuestRankings().then(setRankings);
+      }
     }
-  }, [user, guestEntries, guestBodyweight, guestBodyweightUnit, guestGender]);
+  }, [user]);
 
   useEffect(() => {
     fetchData();
@@ -73,8 +85,12 @@ export default function StrengthMapPage() {
 
         const rankingsData = await getRankings();
         setRankings(rankingsData);
+      } else {
+        // For guests, use cached rankings if available
+        if (Object.keys(guestRankings).length > 0) {
+          setRankings(guestRankings);
+        }
       }
-      // For guests, rankings come from guestEntries (handled in render)
     } catch (err: any) {
       if (!user) {
         // Guest mode - no profile needed

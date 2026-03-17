@@ -113,7 +113,7 @@ export default function Home() {
           </h2>
           <p className="text-gray-500 dark:text-neutral-400 mb-8">
             {isGuest
-              ? "Compare your lift stats against strength standards. Sign up to save your results."
+              ? "Compare your lift stats against strength standards. Sign up to save your results. Logged in users get seemless muscle mapping highlights due to caching and personal tracking"
               : "Your lift data is saved and ready to compare."}
           </p>
 
