@@ -313,3 +313,19 @@ export async function calculateAllRankings(
 
   return results;
 }
+
+export async function saveRankingsToCache(userId: string): Promise<void> {
+  const rankings = await calculateAllRankings(userId);
+  
+  const data = Array.from(rankings.entries()).map(([muscleGroup, rankingData]) => ({
+    user_id: userId,
+    muscle_group: muscleGroup,
+    tier: rankingData.tier,
+    percentile: rankingData.percentile,
+    color: rankingData.color,
+  }));
+  
+  await prisma.userRankings.deleteMany({ where: { user_id: userId } });
+  await prisma.userRankings.createMany({ data });
+}
+

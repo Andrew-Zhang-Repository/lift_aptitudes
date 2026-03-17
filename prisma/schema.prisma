@@ -42,7 +42,7 @@ model UserRankings {
   color        String
   updated_at   DateTime @updatedAt
   
-  @@id([user_id, muscle_group])
+  @@unique([user_id, muscle_group])
 }
 
 

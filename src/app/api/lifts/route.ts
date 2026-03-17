@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import prisma from '../../../lib/prisma'
 import { createServerClient } from '../../../lib/supabase-server'
 import { one_rep_max } from '../../../lib/rep-max'
+import { saveRankingsToCache } from '../../../lib/rankings'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -58,15 +59,34 @@ export async function POST(request: Request) {
   
   const estimated_1rm = one_rep_max(weight, reps)
   
-  const entry = await prisma.userLiftEntries.create({
-    data: {
-      user_id: user.id,
-      lift_id,
-      weight,
-      reps,
-      estimated_1rm
-    }
-  })
+  // Check if entry exists for this lift
+  const existingEntry = await prisma.userLiftEntries.findFirst({
+    where: { user_id: user.id, lift_id }
+  });
+  
+  let entry;
+  
+  if (existingEntry) {
+    // Update existing entry
+    entry = await prisma.userLiftEntries.update({
+      where: { id: existingEntry.id },
+      data: { weight, reps, estimated_1rm }
+    });
+  } else {
+    // Create new entry
+    entry = await prisma.userLiftEntries.create({
+      data: {
+        user_id: user.id,
+        lift_id,
+        weight,
+        reps,
+        estimated_1rm
+      }
+    });
+  }
+  
+  // Save rankings to cache
+  await saveRankingsToCache(user.id);
   
   return NextResponse.json(entry, { status: 201 })
 }
@@ -126,6 +146,9 @@ export async function DELETE(request: Request) {
   // If ?all=true, delete all user entries
   if (deleteAll === 'true') {
     await prisma.userLiftEntries.deleteMany({
+      where: { user_id: user.id }
+    })
+    await prisma.userRankings.deleteMany({
       where: { user_id: user.id }
     })
     return new NextResponse(null, { status: 204 })
