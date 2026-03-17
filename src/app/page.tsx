@@ -69,7 +69,7 @@ export default function Home() {
             Lift Aptitudes
           </h1>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
             {isGuest ? (
               <>
                 <Link
@@ -148,39 +148,25 @@ export default function Home() {
               </Link>
             </div>
           ) : (
-          /* Placeholder cards for guests */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="rounded-xl border border-gray-200 dark:border-neutral-700 p-6 hover:shadow-md transition-shadow bg-neutral-50 dark:bg-neutral-900/50">
-              
+          /* Guest cards */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Link href="/strength-map" className="rounded-xl border border-gray-200 dark:border-neutral-700 p-6 hover:shadow-md transition-shadow bg-neutral-50 dark:bg-neutral-900/50">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Strength Standards
+                Strength Map
               </h3>
               <p className="text-sm text-gray-500 dark:text-neutral-400">
                 See how your lifts rank from beginner to elite.
               </p>
-            </div>
+            </Link>
 
-            <div className="rounded-xl border border-gray-200 dark:border-neutral-700 p-6 hover:shadow-md transition-shadow bg-neutral-50 dark:bg-neutral-900/50">
-             
+            <Link href="/add-lift" className="rounded-xl border border-gray-200 dark:border-neutral-700 p-6 hover:shadow-md transition-shadow bg-neutral-50 dark:bg-neutral-900/50">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Muscle Group Analysis
+                Add Lift
               </h3>
               <p className="text-sm text-gray-500 dark:text-neutral-400">
-                Breakdown of strengths and weaknesses by muscle group.
+                Log a new lift entry and track your progress. You have to be logged in for this to be saved.
               </p>
-            </div>
-
-            <div className="rounded-xl border border-gray-200 dark:border-neutral-700 p-6 hover:shadow-md transition-shadow bg-neutral-50 dark:bg-neutral-900/50">
-
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Track Progress
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-neutral-400">
-                {isGuest
-                  ? "Sign up to track your lifts over time."
-                  : "View your lift history and trends."}
-              </p>
-            </div>
+            </Link>
           </div>
           )}
         </div>

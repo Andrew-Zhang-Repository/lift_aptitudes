@@ -4,9 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getAvailableLifts, createLiftEntry, getProfile, updateProfile, Lift, ProfileResponse } from "../../lib/api";
+import { useGuest } from "../contexts/GuestContext";
+import { useAuth } from "../contexts/AuthContext";
+import { one_rep_max } from "../../lib/rep-max";
 
 export default function AddLiftPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { guestEntries, addGuestEntry } = useGuest();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [lifts, setLifts] = useState<Lift[]>([]);
@@ -33,14 +38,17 @@ export default function AddLiftPage() {
 
   const fetchData = async () => {
     try {
-      const [liftsData, profileData] = await Promise.all([
-        getAvailableLifts(),
-        getProfile(),
-      ]);
+      const liftsData = await getAvailableLifts();
       setLifts(liftsData);
-      setProfile(profileData);
+      
+      if (user) {
+        const profileData = await getProfile();
+        setProfile(profileData);
+      }
     } catch (err: any) {
-      if (err.message.includes("401") || err.message.includes("Not found")) {
+      if (!user) {
+        // Guest mode - no profile needed
+      } else if (err.message.includes("401") || err.message.includes("Not found")) {
         router.push("/onboarding");
       } else {
         setError("Failed to load data. Please try again.");
@@ -91,7 +99,22 @@ export default function AddLiftPage() {
     }
 
     try {
-      await createLiftEntry({ lift_id: liftId, weight: isBodyweight ? weightKg : weightKg, reps });
+      if (user && profile) {
+        // Logged in user - save to API
+        await createLiftEntry({ lift_id: liftId, weight: isBodyweight ? weightKg : weightKg, reps });
+      } else {
+        // Guest - save to local state
+        const estimated1rm = one_rep_max(isBodyweight ? weightKg : weightKg, reps);
+        addGuestEntry({
+          lift_id: liftId,
+          lift_name: selectedLift?.name || "",
+          muscle_group: selectedLift?.muscle_group || "",
+          weight: isBodyweight ? weightKg : weightKg,
+          reps: reps,
+          estimated_1rm: estimated1rm,
+          date: new Date(),
+        });
+      }
       setSuccess("Lift added successfully!");
       setFormData({ lift_id: "", weight: "", reps: "" });
     } catch (err: any) {
