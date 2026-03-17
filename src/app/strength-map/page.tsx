@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BodyDiagram from "../../components/BodyDiagram";
@@ -17,96 +17,49 @@ const TIER_COLORS = [
   { tier: "UNTRAINED", color: "#9CA3AF", label: "Untrained" },
 ];
 
-const TIER_PERCENTILE_RANGES: Record<string, [number, number]> = {
-  UNTRAINED: [0, 20],
-  BEGINNER: [20, 40],
-  NOVICE: [40, 60],
-  INTERMEDIATE: [60, 80],
-  ADVANCED: [80, 95],
-  ELITE: [95, 100],
-};
-
-const TIER_COLORS_MAP: Record<string, string> = {
-  UNTRAINED: "#9CA3AF",
-  BEGINNER: "#EF4444",
-  NOVICE: "#F59E0B",
-  INTERMEDIATE: "#22C55E",
-  ADVANCED: "#8B5CF6",
-  ELITE: "#EAB308",
-};
-
-function getTierForReps(reps: number): { tier: string; percentile: number; color: string } {
-  // For bodyweight exercises (Pullups), use reps directly
-  if (reps <= 1) return { tier: "BEGINNER", percentile: 25, color: TIER_COLORS_MAP.BEGINNER };
-  if (reps < 6) return { tier: "BEGINNER", percentile: 20 + (reps - 1) * 4, color: TIER_COLORS_MAP.BEGINNER };
-  if (reps < 12) return { tier: "NOVICE", percentile: 40 + (reps - 6) * 3.3, color: TIER_COLORS_MAP.NOVICE };
-  if (reps < 21) return { tier: "INTERMEDIATE", percentile: 60 + (reps - 12) * 2.2, color: TIER_COLORS_MAP.INTERMEDIATE };
-  if (reps < 30) return { tier: "ADVANCED", percentile: 80 + (reps - 21) * 1.7, color: TIER_COLORS_MAP.ADVANCED };
-  return { tier: "ELITE", percentile: 95, color: TIER_COLORS_MAP.ELITE };
-}
-
-function getTierForWeight(estimated1rm: number): { tier: string; percentile: number; color: string } {
-  // For weighted exercises, use estimated 1RM
-  if (estimated1rm < 40) return { tier: "BEGINNER", percentile: 25, color: TIER_COLORS_MAP.BEGINNER };
-  if (estimated1rm < 60) return { tier: "NOVICE", percentile: 50, color: TIER_COLORS_MAP.NOVICE };
-  if (estimated1rm < 80) return { tier: "INTERMEDIATE", percentile: 70, color: TIER_COLORS_MAP.INTERMEDIATE };
-  if (estimated1rm < 100) return { tier: "ADVANCED", percentile: 87, color: TIER_COLORS_MAP.ADVANCED };
-  return { tier: "ELITE", percentile: 95, color: TIER_COLORS_MAP.ELITE };
-}
-
-function calculateGuestRankings(entries: any[]): Record<string, any> {
-  const rankings: Record<string, any> = {};
-  
-  // Group entries by muscle group
-  const byMuscle = entries.reduce((acc, entry) => {
-    if (!acc[entry.muscle_group]) {
-      acc[entry.muscle_group] = [];
-    }
-    acc[entry.muscle_group].push(entry);
-    return acc;
-  }, {} as Record<string, any[]>);
-  
-  // For each muscle group, find the best entry
-  for (const [muscle, muscleEntries] of Object.entries(byMuscle) as [string, any[]][]) {
-    if (muscleEntries.length === 0) continue;
-    
-    const best = muscleEntries.reduce((bestEntry: any, current: any) => {
-      return (current.estimated_1rm > bestEntry.estimated_1rm) ? current : bestEntry;
-    }, muscleEntries[0]);
-    
-    // Determine tier based on exercise type and 1RM/reps
-    let tierResult;
-    if (best.lift_name === "Pullups") {
-      tierResult = getTierForReps(best.reps);
-    } else {
-      tierResult = getTierForWeight(best.estimated_1rm);
-    }
-    
-    rankings[muscle] = {
-      tier: tierResult.tier,
-      percentile: Math.round(tierResult.percentile),
-      color: tierResult.color,
-    };
-  }
-  
-  return rankings;
-}
-
 export default function StrengthMapPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { guestEntries, clearGuestEntries } = useGuest();
+  const { guestEntries, clearGuestEntries, guestBodyweight, guestBodyweightUnit, guestGender } = useGuest();
   const [loading, setLoading] = useState(true);
   const [rankings, setRankings] = useState<Record<string, any>>({});
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
 
+  // Fetch guest rankings from API
+  const fetchGuestRankings = async () => {
+    if (guestEntries.length === 0 || !guestBodyweight) return {};
+    
+    try {
+      const response = await fetch('/api/rankings/guest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bodyweight: guestBodyweight,
+          unit: guestBodyweightUnit,
+          gender: guestGender,
+          entries: guestEntries,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch rankings');
+      }
+      
+      return await response.json();
+    } catch (err) {
+      console.error('Error fetching guest rankings:', err);
+      return {};
+    }
+  };
+
   // Calculate guest rankings from guest entries
-  const guestRankings = useMemo(() => {
-    if (guestEntries.length === 0) return {};
-    return calculateGuestRankings(guestEntries);
-  }, [guestEntries]);
+  useEffect(() => {
+    if (!user && guestEntries.length > 0 && guestBodyweight > 0) {
+      fetchGuestRankings().then(setRankings);
+    }
+  }, [user, guestEntries, guestBodyweight, guestBodyweightUnit, guestGender]);
 
   useEffect(() => {
     fetchData();
@@ -155,8 +108,8 @@ export default function StrengthMapPage() {
     }
   };
 
-  // Use guest rankings for guests, or API rankings for logged in users
-  const displayRankings = user ? rankings : guestRankings;
+  // Use rankings (same for both guests and logged in users)
+  const displayRankings = rankings;
 
   if (loading) {
     return (

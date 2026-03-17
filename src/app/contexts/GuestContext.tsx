@@ -17,16 +17,24 @@ type GuestContextType = {
   addGuestEntry: (entry: GuestEntry) => void;
   clearGuestEntries: () => void;
   getGuestEntries: () => GuestEntry[];
+  guestBodyweight: number;
+  setGuestBodyweight: (weight: number) => void;
+  guestBodyweightUnit: "POUNDS" | "KILOGRAMS";
+  setGuestBodyweightUnit: (unit: "POUNDS" | "KILOGRAMS") => void;
+  guestGender: "MALE" | "FEMALE";
+  setGuestGender: (gender: "MALE" | "FEMALE") => void;
 };
 
 const GuestContext = createContext<GuestContextType | undefined>(undefined);
 
 export function GuestProvider({ children }: { children: ReactNode }) {
   const [guestEntries, setGuestEntries] = useState<GuestEntry[]>([]);
+  const [guestBodyweight, setGuestBodyweight] = useState<number>(0);
+  const [guestBodyweightUnit, setGuestBodyweightUnit] = useState<"POUNDS" | "KILOGRAMS">("KILOGRAMS");
+  const [guestGender, setGuestGender] = useState<"MALE" | "FEMALE">("MALE");
 
   const addGuestEntry = (entry: GuestEntry) => {
     setGuestEntries((prev) => {
-      // Check if entry exists for this lift, update if so
       const existingIndex = prev.findIndex((e) => e.lift_id === entry.lift_id);
       if (existingIndex >= 0) {
         const updated = [...prev];
@@ -44,7 +52,18 @@ export function GuestProvider({ children }: { children: ReactNode }) {
   const getGuestEntries = () => guestEntries;
 
   return (
-    <GuestContext.Provider value={{ guestEntries, addGuestEntry, clearGuestEntries, getGuestEntries }}>
+    <GuestContext.Provider value={{ 
+      guestEntries, 
+      addGuestEntry, 
+      clearGuestEntries, 
+      getGuestEntries,
+      guestBodyweight,
+      setGuestBodyweight,
+      guestBodyweightUnit,
+      setGuestBodyweightUnit,
+      guestGender,
+      setGuestGender,
+    }}>
       {children}
     </GuestContext.Provider>
   );

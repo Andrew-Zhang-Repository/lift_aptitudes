@@ -11,7 +11,7 @@ import { one_rep_max } from "../../lib/rep-max";
 export default function AddLiftPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { guestEntries, addGuestEntry } = useGuest();
+  const { guestEntries, addGuestEntry, guestBodyweight, setGuestBodyweight, guestBodyweightUnit, setGuestBodyweightUnit, guestGender, setGuestGender } = useGuest();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [lifts, setLifts] = useState<Lift[]>([]);
@@ -33,8 +33,10 @@ export default function AddLiftPage() {
   useEffect(() => {
     if (profile?.bodyweight_unit) {
       setUnit(profile.bodyweight_unit);
+    } else if (!user && guestBodyweightUnit) {
+      setUnit(guestBodyweightUnit);
     }
-  }, [profile]);
+  }, [profile, guestBodyweightUnit, user]);
 
   const fetchData = async () => {
     try {
@@ -78,16 +80,24 @@ export default function AddLiftPage() {
     const isBodyweight = selectedLift?.name === "Pullups";
 
     let weightKg = weight;
-    if (isBodyweight && profile) {
-      weightKg = profile.bodyweight_unit === "KILOGRAMS" 
-        ? profile.bodyweight 
-        : profile.bodyweight * 0.453592;
-    } else if (!isBodyweight && weight > 0) {
+    if (isBodyweight) {
+      const bodyWeight = profile?.bodyweight || guestBodyweight;
+      const bodyWeightUnit = profile?.bodyweight_unit || guestBodyweightUnit;
+      weightKg = bodyWeightUnit === "KILOGRAMS" 
+        ? bodyWeight 
+        : bodyWeight * 0.453592;
+    } else if (weight > 0) {
       weightKg = unit === "POUNDS" ? weight * 0.453592 : weight;
     }
 
     if (!isBodyweight && (!weight || weight <= 0)) {
       setError("Weight must be greater than 0.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (isBodyweight && (!guestBodyweight && !profile?.bodyweight)) {
+      setError("Please enter your bodyweight above first.");
       setSubmitting(false);
       return;
     }
@@ -146,6 +156,8 @@ export default function AddLiftPage() {
       } catch (err) {
         console.error("Failed to update unit preference:", err);
       }
+    } else if (!user) {
+      setGuestBodyweightUnit(newUnit);
     }
   };
 
@@ -208,6 +220,57 @@ export default function AddLiftPage() {
           {success && (
             <div className="mb-6 rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-sm text-green-300">
               {success}
+            </div>
+          )}
+
+          {/* Guest Bodyweight/Gender Input */}
+          {!user && (
+            <div className="mb-6 p-4 rounded-lg bg-gray-100 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700">
+              <p className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">
+                Your stats (for accurate rankings)
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1">
+                    Weight
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={guestBodyweight || ""}
+                    onChange={(e) => setGuestBodyweight(parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1">
+                    Unit
+                  </label>
+                  <select
+                    value={guestBodyweightUnit}
+                    onChange={(e) => setGuestBodyweightUnit(e.target.value as "POUNDS" | "KILOGRAMS")}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  >
+                    <option value="POUNDS">lbs</option>
+                    <option value="KILOGRAMS">kg</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1">
+                    Gender
+                  </label>
+                  <select
+                    value={guestGender}
+                    onChange={(e) => setGuestGender(e.target.value as "MALE" | "FEMALE")}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  >
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                  </select>
+                </div>
+              </div>
             </div>
           )}
 
