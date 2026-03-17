@@ -35,14 +35,31 @@ enum ExperienceLevel{
 }
 
 model UserRankings {
-  user_id      String
-  muscle_group String
-  tier         String
-  percentile   Int
-  color        String
-  updated_at   DateTime @updatedAt
+  user_id        String
+  muscle_group   String
+  tier           String
+  percentile    Int
+  color          String
+  lift_name      String?    // Add this
+  weight         Float?     // Add this
+  reps          Int?       // Add this
+  estimated_1rm Float?     // Add this
+  updated_at     DateTime @updatedAt
   
   @@unique([user_id, muscle_group])
+}
+
+model UserMuscleHistory {
+  id            Int      @id @default(autoincrement())
+  user_id       String
+  muscle_group  String
+  lift_name     String
+  weight        Float
+  reps          Int
+  estimated_1rm Float
+  date          DateTime @default(now())
+  
+  @@index([user_id, muscle_group])
 }
 
 

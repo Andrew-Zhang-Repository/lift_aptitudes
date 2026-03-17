@@ -31,7 +31,7 @@ export async function GET() {
     }
   } else {
     // Calculate fresh and save to cache
-    const rankings = await calculateAllRankings(user.id);
+    const { rankings } = await calculateAllRankings(user.id);
     await saveRankingsToCache(user.id);
     
     // Convert Map to plain object

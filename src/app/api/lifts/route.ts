@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import prisma from '../../../lib/prisma'
 import { createServerClient } from '../../../lib/supabase-server'
 import { one_rep_max } from '../../../lib/rep-max'
-import { saveRankingsToCache } from '../../../lib/rankings'
+import { saveRankingsToCache, checkAndSavePersonalBest } from '../../../lib/rankings'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -59,6 +59,15 @@ export async function POST(request: Request) {
   
   const estimated_1rm = one_rep_max(weight, reps)
   
+  // Get lift info for muscle group
+  const lift = await prisma.lifts.findUnique({
+    where: { id: lift_id }
+  });
+  
+  if (!lift) {
+    return NextResponse.json({ error: 'Lift not found' }, { status: 404 })
+  }
+  
   // Check if entry exists for this lift
   const existingEntry = await prisma.userLiftEntries.findFirst({
     where: { user_id: user.id, lift_id }
@@ -84,6 +93,18 @@ export async function POST(request: Request) {
       }
     });
   }
+  
+  // Check if this is a new personal best and save to history
+  await checkAndSavePersonalBest(
+    user.id,
+    lift_id,
+    lift.name,
+    lift.muscle_group,
+    estimated_1rm,
+    weight,
+    reps,
+    entry.date
+  );
   
   // Save rankings to cache
   await saveRankingsToCache(user.id);

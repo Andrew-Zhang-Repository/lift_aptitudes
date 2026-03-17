@@ -262,9 +262,17 @@ export async function calculateRanking(
   };
 }
 
+export type BestEntry = {
+  lift_name: string;
+  weight: number;
+  reps: number;
+  estimated_1rm: number;
+  date: Date;
+};
+
 export async function calculateAllRankings(
   userId: string
-): Promise<Map<string, RankingResult>> {
+): Promise<{ rankings: Map<string, RankingResult>; bestEntries: Map<string, BestEntry> }> {
   const profile = await prisma.userProfiles.findUnique({
     where: { user_id: userId },
   });
@@ -291,7 +299,8 @@ export async function calculateAllRankings(
     }
   }
 
-  const results = new Map<string, RankingResult>();
+  const rankings = new Map<string, RankingResult>();
+  const bestEntries = new Map<string, BestEntry>();
 
   for (const [, entry] of latestEntriesPerLift) {
     const ranking = await calculateRanking(
@@ -305,27 +314,76 @@ export async function calculateAllRankings(
     // Only rank the primary muscle group, not secondary muscles
     const primaryGroup = entry.lift.muscle_group;
 
-    const existingPrimary = results.get(primaryGroup);
+    const existingPrimary = rankings.get(primaryGroup);
     if (!existingPrimary || ranking.percentile > existingPrimary.percentile) {
-      results.set(primaryGroup, ranking);
+      rankings.set(primaryGroup, ranking);
+      bestEntries.set(primaryGroup, {
+        lift_name: entry.lift.name,
+        weight: entry.weight,
+        reps: entry.reps,
+        estimated_1rm: entry.estimated_1rm,
+        date: entry.date,
+      });
     }
   }
 
-  return results;
+  return { rankings, bestEntries };
 }
 
 export async function saveRankingsToCache(userId: string): Promise<void> {
-  const rankings = await calculateAllRankings(userId);
+  const { rankings, bestEntries } = await calculateAllRankings(userId);
   
-  const data = Array.from(rankings.entries()).map(([muscleGroup, rankingData]) => ({
-    user_id: userId,
-    muscle_group: muscleGroup,
-    tier: rankingData.tier,
-    percentile: rankingData.percentile,
-    color: rankingData.color,
-  }));
+  const data = Array.from(rankings.entries()).map(([muscleGroup, rankingData]) => {
+    const bestEntry = bestEntries.get(muscleGroup);
+    return {
+      user_id: userId,
+      muscle_group: muscleGroup,
+      tier: rankingData.tier,
+      percentile: rankingData.percentile,
+      color: rankingData.color,
+      lift_name: bestEntry?.lift_name || null,
+      weight: bestEntry?.weight || null,
+      reps: bestEntry?.reps || null,
+      estimated_1rm: bestEntry?.estimated_1rm || null,
+    };
+  });
   
   await prisma.userRankings.deleteMany({ where: { user_id: userId } });
   await prisma.userRankings.createMany({ data });
+}
+
+export async function checkAndSavePersonalBest(
+  userId: string,
+  liftId: number,
+  liftName: string,
+  muscleGroup: string,
+  estimated_1rm: number,
+  weight: number,
+  reps: number,
+  date: Date
+): Promise<boolean> {
+  // Get current best for this muscle group
+  const currentBest = await prisma.userMuscleHistory.findFirst({
+    where: { user_id: userId, muscle_group: muscleGroup },
+    orderBy: { estimated_1rm: 'desc' },
+  });
+  
+  // If no existing best or new 1RM is higher, save as new PB
+  if (!currentBest || estimated_1rm > currentBest.estimated_1rm) {
+    await prisma.userMuscleHistory.create({
+      data: {
+        user_id: userId,
+        muscle_group: muscleGroup,
+        lift_name: liftName,
+        weight,
+        reps,
+        estimated_1rm,
+        date,
+      },
+    });
+    return true; // New PB saved
+  }
+  
+  return false; // Not a new PB
 }
 
