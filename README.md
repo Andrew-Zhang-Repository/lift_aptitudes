@@ -8,8 +8,8 @@ Gym app where you can see how you compare with the gym standard with seeded data
 #### Vercel Link
 [Lift Aptitudes](https://lift-aptitudes.vercel.app/)
 
-
-# Code ready to deploy using AWS cloudfront
+---
+# Local use and for source code modifications
 ```
 
 ---
