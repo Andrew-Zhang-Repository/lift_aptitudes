@@ -1,53 +1,35 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "./contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getProfile, getRankings, ProfileResponse } from "../lib/api";
+import { useProfile, useRankings } from "../lib/api";
 
 export default function Home() {
   const { user, logout, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [hasProfile, setHasProfile] = useState(false);
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
-  const [rankings, setRankings] = useState<Record<string, any>>({});
+  
+  const { profile, isLoading: profileLoading, error: profileError } = useProfile();
+  const { rankings, isLoading: rankingsLoading } = useRankings();
 
   const isGuest = !user;
+  const isLoading = authLoading || profileLoading;
+  const hasProfile = !!profile && !profileError;
+  
+  const loading = authLoading || profileLoading || rankingsLoading;
 
   useEffect(() => {
-    if (!authLoading) {
-      if (user) {
-        checkProfile();
-      } else {
-        setLoading(false);
-      }
+    if (!authLoading && user && hasProfile === false && profileError) {
+      router.push("/onboarding");
     }
-  }, [authLoading, user]);
-
-  const checkProfile = async () => {
-    try {
-      const profileData: ProfileResponse = await getProfile();
-      setProfile(profileData);
-      setHasProfile(true);
-      // Fetch rankings if profile exists
-      const ranks = await getRankings();
-      setRankings(ranks);
-    } catch (err: any) {
-      if (err.message.includes("401") || err.message.includes("Not found")) {
-        router.push("/onboarding");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [authLoading, user, hasProfile, profileError, router]);
 
   const handleLogout = async () => {
     await logout();
     router.push("/login");
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-neutral-900">
         <div className="text-center">

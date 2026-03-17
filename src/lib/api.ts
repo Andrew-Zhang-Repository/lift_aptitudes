@@ -1,5 +1,5 @@
 import { Gender, WeightUnit, ExperienceLevel } from "../generated/prisma/client";
-
+import useSWR from 'swr'
 
 export type ProfileInput = {
   display_name: string;
@@ -32,6 +32,36 @@ export type RankingResult = {
   color: string;
 };
 
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+
+export function useProfile() {
+  const { data, error, isLoading, mutate } = useSWR('/api/profile', fetcher);
+  return { 
+    profile: data, 
+    isLoading, 
+    error, 
+    refresh: mutate 
+  };
+}
+export function useRankings() {
+  const { data, error, isLoading, mutate } = useSWR('/api/rankings', fetcher);
+  return { 
+    rankings: data, 
+    isLoading, 
+    error, 
+    refresh: mutate 
+  };
+}
+export function useLiftEntries() {
+  const { data, error, isLoading, mutate } = useSWR('/api/lifts', fetcher);
+  return { 
+    entries: data, 
+    isLoading, 
+    error, 
+    refresh: mutate 
+  };
+}
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {

@@ -34,6 +34,17 @@ enum ExperienceLevel{
   ELITE
 }
 
+model UserRankings {
+  user_id      String
+  muscle_group String
+  tier         String
+  percentile   Int
+  color        String
+  updated_at   DateTime @updatedAt
+  
+  @@id([user_id, muscle_group])
+}
+
 
 model UserProfiles {
   user_id String @id     
