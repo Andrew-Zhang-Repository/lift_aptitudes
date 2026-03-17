@@ -63,7 +63,7 @@ export default function StrengthMapPage() {
 
   // Load guest rankings on mount (use cache if available)
   useEffect(() => {
-    if (!user && guestEntries.length > 0 && guestBodyweight > 0) {
+    if (!authLoading && !user && guestEntries.length > 0 && guestBodyweight > 0) {
       // If we have cached rankings, use them immediately
       if (Object.keys(guestRankings).length > 0) {
         setRankings(guestRankings);
@@ -71,30 +71,29 @@ export default function StrengthMapPage() {
         fetchGuestRankings().then(setRankings);
       }
     }
-  }, [user]);
+  }, [user, authLoading, guestEntries, guestBodyweight, guestRankings]);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (!authLoading) {
+      // Small delay to ensure auth session is ready on the server
+      const timer = setTimeout(() => {
+        fetchData();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [user, authLoading]);
 
   const fetchData = async () => {
+    if (!user) return;
+    
     try {
-      if (user) {
-        const profileData = await getProfile();
-        setProfile(profileData);
+      const profileData = await getProfile();
+      setProfile(profileData);
 
-        const rankingsData = await getRankings();
-        setRankings(rankingsData);
-      } else {
-        // For guests, use cached rankings if available
-        if (Object.keys(guestRankings).length > 0) {
-          setRankings(guestRankings);
-        }
-      }
+      const rankingsData = await getRankings();
+      setRankings(rankingsData);
     } catch (err: any) {
-      if (!user) {
-        // Guest mode - no profile needed
-      } else if (err.message.includes("401") || err.message.includes("Not found")) {
+      if (err.message.includes("401") || err.message.includes("Not found") || err.message.includes("Unauthorized")) {
         router.push("/onboarding");
       } else {
         setError("Failed to load data. Please try again.");
