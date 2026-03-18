@@ -2,14 +2,14 @@
 ### Lift Aptitudes
 
 #### Summary
-Gym app where you can see how you compare with the gym standard with seeded data from strengthlevel.com. Used Next.js + Typescript as the framework and language, supabase for the postgres server, and Prisma ORM for postgres querying logic and for seeding. Project is deployed on Vercel so no Dockerfile included for synced installation with the versions use in dev environment.
+Gym app where you can see how you compare with the gym standard with seeded data from strengthlevel.com. Used Next.js + Typescript as the framework and language, supabase for the postgres server, and Prisma ORM for postgres querying logic and for seeding. Project is deployed on Vercel so no Dockerfile included for synced installation with the versions used in dev environment.
 
 ---
 #### Vercel Link
 [Lift Aptitudes](https://lift-aptitudes.vercel.app/)
 
-
-# Code ready to deploy using AWS cloudfront
+---
+# Local use and for source code modifications
 ```
 
 ---
