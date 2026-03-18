@@ -84,7 +84,10 @@ export default function StrengthMapPage() {
   }, [user, authLoading]);
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!user){
+      setLoading(false);
+      return;
+    }
     
     try {
       const profileData = await getProfile();
