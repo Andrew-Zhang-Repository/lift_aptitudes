@@ -15,7 +15,7 @@ Gym app where you can see how you compare with the gym standard with seeded data
 ---
 #### Install and run guide locally and for own use
 ```bash
-# Create a .env in root directory and provide your own supbase details
+# Create a .env in root directory and provide your own supabase details
 npm run dev
 ```
 ---
